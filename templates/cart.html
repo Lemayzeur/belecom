@@ -18,7 +18,7 @@
 			</thead>
 			<tbody>
 				{% for item in cart_items %}
-			    <tr class="wrapper-item">
+			    <tr class="wrapper-item" id="unique-item-{{item.id}}" item-id='{{item.id}}'>
 			      <td scope="row">{{forloop.counter}}</td>
 			      <td>{{item.product.name}}</td>
 			      <td>
@@ -30,7 +30,9 @@
 			      </td>
 			      <td class="price" value="{{item.price}}">{{item.price}} $</td>
 			      <td class="total">{{item.total}} $</td>
-			      <td style="text-align: center;"><a href="/remove-from-cart/{{item.product.id}}"><i class="fa fa-trash text-danger"></i></a></td>
+			      <td style="text-align: center;">
+			      	<a href="/remove-from-cart/{{item.product.id}}"><i class="fa fa-trash text-danger"></i></a>
+			     	</td>
 			  	</tr>
 			  	{% empty %}
 			  	<tr>
@@ -43,9 +45,9 @@
 		 	<tfoot>
 		 		<tr style="font-weight: bold;">
 		 			<td colspan="2" style="text-align: right;">TOTAL</td>
-		 			<td>{{cart.total_item_2}}</td>
+		 			<td class="cart_item_total">{{cart.total_item_2}}</td>
 		 			<td>-</td>
-		 			<td>{{cart.total}}</td>
+		 			<td>{{cart.grand_total}} $</td>
 		 		</tr>
 		 	</tfoot>
 	</table>
@@ -59,7 +61,6 @@
 
 {% block script %}
 <script type="text/javascript">
-			
 	// get the minus button
 	let minBtnList = document.querySelectorAll('.wrapper-item button.minus');
 
@@ -88,14 +89,46 @@
 		element.value = nwQty;
 
 		let price = parseFloat(parent.querySelector("td[class=price]").getAttribute("value"));
-		updateTotal(nwQty, price, parent.querySelector("td[class=total]"));
-	}
 
+		// Update the frontend
+		updateTotal(nwQty, price, parent.querySelector("td[class=total]"));
+
+		// update global cart
+		let globalCartEl = document.querySelector('.global_cart_total');
+		let cartItemEl = document.querySelector('.cart_item_total');
+		let newText = parseInt(globalCartEl.innerText) + step;
+		globalCartEl.innerText = newText;
+		cartItemEl.innerText = newText;
+
+		// Save data in Backend(Django)
+		sendData({qty: nwQty, price, item_id: parent.getAttribute('item-id')});
+	}
 
 	// Modfiye kolòn total 
 	function updateTotal(nwQty, price, totalNode){
 		newTotal = nwQty * price;
 		totalNode.innerText = `${newTotal.toFixed(1)} \$`;
 	}
+
+	function sendData(data){
+		let xhr = new XMLHttpRequest();
+
+		var formData = new FormData();
+		for ( var key in data) {
+		    formData.append(key, data[key]);
+		}
+
+
+		xhr.open('POST', "", true)
+		xhr.setRequestHeader("X-CSRFToken", "{{csrf_token}}");
+		xhr.onreadystatechange = function () {
+	        // if (xhr.readyState === 4 && xhr.status === 200) {
+	        //     var res = JSON.parse(xhr.response);
+	        //     console.log(res);
+	        // }
+	    };
+		xhr.send(formData);
+	}
+
 </script>
 {% endblock script %}

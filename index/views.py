@@ -78,6 +78,23 @@ def cart(request):
     cart = getCart(request)
     cart_items = cart.cartproduct_set.all()
 
+    if request.method == 'POST':
+        item_id = request.POST.get("item_id")
+        qty = request.POST.get("qty")
+        price = request.POST.get("price")
+
+        try:
+            qty = int(qty)
+            price = float(price)
+
+            item = cart_items.get(id=item_id)
+            if(item.price == price):
+                item.quantity = qty 
+                item.save()
+
+        except ValueError:
+            pass 
+
     context = {
         'cart': cart,
         'cart_items':cart_items,

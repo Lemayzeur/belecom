@@ -78,6 +78,12 @@ class Cart(models.Model):
 			return items.aggregate(t=models.Sum('quantity'))['t']
 		return 0
 
+
+	def grand_total(self):
+		return self.cartproduct_set.annotate(
+				pri_total = models.F("price") * models.F("quantity")
+			).aggregate(gt = models.Sum('pri_total'))['gt']
+
 	def __str__(self):
 		return "CC0" + str(self.id)
 
