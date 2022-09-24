@@ -22,19 +22,20 @@ from django.conf import settings
 
 from index.views import (
     index, shop, cart, addToCart,
-    register, loginView,
+    register, loginView,logoutView,
 )
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
     path('', index, name='index'),
-    path('shop/', shop),
-    path('cart/', cart),
-    path('login/', loginView),
-    path('register/', register),
+    path('shop/', shop, name='shop'),
+    path('cart/', cart, name='cart'),
+    path('login/', loginView, name='login'),
+    path('logout/', logoutView, name='logout'),
+    path('register/', register, name='register'),
 
-
-    path('add-to-cart/<int:product_id>', addToCart),
+    path('add-to-cart/<int:product_id>', addToCart, name='addToCart'),
 ]
 
 if settings.DEBUG:

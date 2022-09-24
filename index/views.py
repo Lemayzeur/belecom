@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, HttpResponseRedirect
 from django.views.generic.list import ListView
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
 from django.http import HttpResponse
 
 from index.models import (
@@ -100,10 +101,39 @@ def loginView(request):
     }
     return render(request, "login.html", context) 
 
+def logoutView(request):
+    logout(request) 
+    return redirect('login')
+
 def register(request):
     if request.user.is_authenticated: # Test si User a konekte
         return redirect('index')
-    context = {}
+
+    error_message = None
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get("confirm_password")
+
+        if password != confirm_password:
+            error_message = "Modpas yo pa menm"
+
+        elif len(password) < 6:
+            error_message = "Modpas sa twò kout"
+
+        else:
+            user = User.objects.create_user(
+                username = email,
+                password = password
+            )
+
+            login(request, user)
+
+            return redirect('index')
+
+    context = {
+        'error_message': error_message,
+    }
     return render(request, "register.html", context)  
 
 def addToCart(request, product_id):

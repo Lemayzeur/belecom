@@ -71,7 +71,10 @@ class Cart(models.Model):
 		return self.cartproduct_set.count()
 
 	def total_item_2(self):
-		return self.cartproduct_set.aggregate(t=models.Sum('quantity'))['t']
+		items = self.cartproduct_set.all()
+		if items:
+			return items.aggregate(t=models.Sum('quantity'))['t']
+		return 0
 
 	def __str__(self):
 		return "CC0" + str(self.id)
