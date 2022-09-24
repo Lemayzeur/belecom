@@ -254,4 +254,6 @@ def removeFromCart(request, product_id):
 
     return redirect(referer_url)
 
-
+def checkout(request):
+    context = {}
+    return render(request, 'checkout.html', context)

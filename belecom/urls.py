@@ -23,7 +23,7 @@ from django.conf import settings
 from index.views import (
     index, shop, cart, addToCart,
     register, loginView,logoutView,
-    removeFromCart,
+    removeFromCart,checkout,
 )
 
 urlpatterns = [
@@ -35,6 +35,7 @@ urlpatterns = [
     path('login/', loginView, name='login'),
     path('logout/', logoutView, name='logout'),
     path('register/', register, name='register'),
+    path('checkout/', checkout, name='checkout'),
 
     path('add-to-cart/<int:product_id>', addToCart, name='addToCart'),
     path('remove-from-cart/<int:product_id>', removeFromCart, name='removeFromCart'),
