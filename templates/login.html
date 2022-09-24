@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block css %}
+<style type="text/css">
+	div.wrapper {
+	  display: flex;
+	  align-items: center;
+	  padding-top: 40px;
+	  padding-bottom: 40px;
+	  background-color: #f5f5f5;
+	}
+
+	.form-signin {
+	  max-width: 330px;
+	  padding: 15px;
+	}
+
+	.form-signin .form-floating:focus-within {
+	  z-index: 2;
+	}
+
+	.form-signin input[type="email"] {
+	  margin-bottom: -1px;
+	  border-bottom-right-radius: 0;
+	  border-bottom-left-radius: 0;
+	}
+
+	.form-signin input[type="password"] {
+	  margin-bottom: 10px;
+	  border-top-left-radius: 0;
+	  border-top-right-radius: 0;
+	}
+
+</style>
+{% endblock css %}
+
+
+{% block body %}
+<div class="wrapper">
+	<main class="form-signin w-100 m-auto">
+	  <form method="post" action="/login/">
+	  	{% csrf_token %}
+	    <h1 class="h3 mb-3 fw-normal">Please sign in</h1>
+	    {% if error_message %}<p class="text-danger">{{error_message}}</p>{% endif %}
+	    <div class="form-floating">
+	      <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com" name="email" required>
+	      <label for="floatingInput">Email address</label>
+	    </div>
+	    <div class="form-floating">
+	      <input type="password" class="form-control" id="floatingPassword" placeholder="Password" name='password' requireds>
+	      <label for="floatingPassword">Password</label>
+	    </div>
+
+	    <button class="w-100 btn btn-lg btn-success" type="submit">Sign in</button>
+	    <p class="mt-5 mb-3">
+	    	No account yet ? <a href="/register">Click to register</a> 
+	    </p>
+	  </form>
+	</main>
+</div>
+{% endblock body %}

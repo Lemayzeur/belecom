@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+
+{% block body %}
+<div class="container">
+	<div class="col-md-8 offset-md-2  mt-5">
+		Your cart ID: #CC0{{cart.id}}
+		<table class="table table-striped">
+			<thead>
+				<tr>
+			      <th scope="col">#</th>
+			      <th scope="col">Product</th>
+			      <th scope="col">Quantity</th>
+			      <th scope="col">Price</th>
+			      <th scope="col">Total</th>
+			      <th scope="col">Options</th>
+			    </tr>
+			</thead>
+			<tbody>
+				{% for item in cart_items %}
+			    <tr>
+			      <th scope="row">{{forloop.counter}}</th>
+			      <td>{{item.product.name}}</td>
+			      <td>{{item.quantity}}</td>
+			      <td>{{item.price}} $</td>
+			      <td>{{item.total}} $</td>
+			      <td style="text-align: center;"><a href="#"><i class="fa fa-trash text-danger"></i></a></td>
+			  	</tr>
+			  	{% empty %}
+			  	<tr>
+			  		<td colspan="4">
+			  			Your cart is empty
+			  		</td>
+			  	</tr>
+			  	{% endfor %}
+		 	</tbody>
+		 	<tfoot>
+		 		<tr style="font-weight: bold;">
+		 			<td colspan="2" style="text-align: right;">TOTAL</td>
+		 			<td>{{cart.total_item_2}}</td>
+		 			<td>-</td>
+		 			<td>{{cart.total}}</td>
+		 		</tr>
+		 	</tfoot>
+	</table>
+
+	<div class="text-right mb-5" style="text-align: right;">
+		<a href="#" class="btn btn-lg btn-dark">Checkout <i class="fa fa-chevron-right"></i></a>
+	</div>
+</div>
+</div>
+{% endblock body %}
