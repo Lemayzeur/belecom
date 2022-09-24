@@ -2,21 +2,42 @@ from django.shortcuts import render, redirect, HttpResponseRedirect
 from django.views.generic.list import ListView
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from django.contrib.sessions.models import Session
 from django.http import HttpResponse
 
 from index.models import (
     Product, Category, Cart, CartProduct
 )
 
+def getCart(request):
+    if request.user.is_authenticated:
+        print("AA")
+        cart = Cart.objects.get_or_create(user=request.user)[0]
+    elif 'cart_id' in request.session:
+        print("BB")
+        cart = Cart.objects.get(id=request.session['cart_id'])
+        print(request.session['cart_id'])
+    else:
+        print("CC")
+        request.session['cart_id'] = -1
+
+        # Kreye yon panye ak enstans session_key ki kreye a
+        cart,created = Cart.objects.get_or_create(
+            session_id = request.session.session_key,
+        )
+
+        print(created)
+
+        request.session['cart_id'] = cart.id
+
+    return cart
+
 def index(request): # fbv
     product_list = Product.objects.filter(is_active=True)[:3]
 
     category_list = Category.objects.all()[:3]
 
-    if request.user.is_authenticated:
-        cart = Cart.objects.get_or_create(user=request.user)[0]
-    else:
-        cart = None
+    cart = getCart(request)
 
     # cart = Cart.objects.get_or_create(user=request.user)[0] if request.user.is_authenticated else None
 
@@ -42,10 +63,7 @@ def shop(request):
 
     brand_list = list(set(product_list.values_list('brand', flat=True)))
 
-    if request.user.is_authenticated:
-        cart = Cart.objects.get_or_create(user=request.user)[0]
-    else:
-        cart = None
+    cart = getCart(request)
 
     context = {
         'product_list': product_list,
@@ -57,17 +75,8 @@ def shop(request):
     return render(request, 'shop.html', context)
 
 def cart(request):
-    if request.user.is_authenticated:
-        # try:
-        #     cart = Cart.objects.get(user=request.user)
-        # except Cart.DoesNotExist:
-        #     cart = Cart.objects.create(user=request.user)
-
-        cart = Cart.objects.get_or_create(user=request.user)[0]
-        cart_items = cart.cartproduct_set.all()    
-    else:
-        cart = None
-        cart_items = []
+    cart = getCart(request)
+    cart_items = cart.cartproduct_set.all()
 
     context = {
         'cart': cart,
@@ -88,6 +97,27 @@ def loginView(request):
         user = authenticate(username=email, password=password)
 
         if user is not None:
+
+            # TODO: Database transaction
+
+            # rekipere yon potansyel cart, ki nan sesyon an
+            if 'cart_id' in request.session:
+                # rekipere panye ki te nan sesyon an
+                session_cart = Cart.objects.get(id=request.session['cart_id'])
+                # Teste si itilizate ki ap konekte a, pat gen yon panye deja.
+                if user.cart_set.exists():
+                    # Si li te gen panye, ann rekipere l
+                    cart = user.cart_set.first()
+                    # Tout pwodwi ki te nan panye sa, nou ajoute yo nan panye sesyon an pito
+                    all_items = cart.cartproduct_set.all()
+                    all_items.update(cart=session_cart)
+                    # Epi nou efase panye user a te genyen an
+                    # cart.delete()
+                # Panye sesyon an, vin pou itilizate ki konekte a kounya
+                session_cart.user = user 
+                # nou dekonekte panye a, ak sesyon an
+                session_cart.session = None
+                session_cart.save() 
             #2 Kreye sesyon
             login(request, user)
 
@@ -95,13 +125,20 @@ def loginView(request):
             return redirect('index') # Referans (urls.py): path('', index, name='index'),
         else:
             error_message = "Idantifyan sa yo pa korèk, oubyen pa ekziste"
-    
+        
+    cart = getCart(request)
+
     context = {
-        'error_message': error_message
+        'error_message': error_message,
+        'cart':cart,
     }
     return render(request, "login.html", context) 
 
 def logoutView(request):
+    print(request.session.get('cart_id'))
+    request.session.pop('cart_id', None)
+    print(request.session.get('cart_id'))
+    session = Session.objects.all().delete()
     logout(request) 
     return redirect('login')
 
@@ -140,10 +177,16 @@ def addToCart(request, product_id):
     referer_url = request.META.get('HTTP_REFERER', '/')
         
     try:
+        product = Product.objects.get(id=product_id)
         if request.user.is_authenticated:
-            product = Product.objects.get(id=product_id)
             cart = Cart.objects.get_or_create(user=request.user)[0]
+        elif 'cart_id' in request.session:
+            cart = Cart.objects.get(id=request.session['cart_id'])
+        else:
+            cart = None
 
+        # Test si cart la ekziste
+        if cart:
             # cp = CartProduct.objects.create(
             cp = CartProduct.objects.filter(
                 cart = cart,
@@ -165,7 +208,33 @@ def addToCart(request, product_id):
 
     return redirect(referer_url)
 
+def removeFromCart(request, product_id):
+    referer_url = request.META.get('HTTP_REFERER', '/')
+        
+    try:
+        product = Product.objects.get(id=product_id)
+        if request.user.is_authenticated:
+            cart = Cart.objects.get_or_create(user=request.user)[0]
+        elif 'cart_id' in request.session:
+            cart = Cart.objects.get(id=request.session['cart_id'])
+        else:
+            cart = None
 
+        # Test si cart la ekziste
+        if cart:
+            # cp = CartProduct.objects.create(
+            cp = CartProduct.objects.filter(
+                cart = cart,
+                product = product,
+            ).first()
 
+            if cp:
+                # si pwodwi a ekziste nan panye a, tout bon
+                cp.delete()            
+
+    except Product.DoesNotExist:
+        pass 
+
+    return redirect(referer_url)
 
 

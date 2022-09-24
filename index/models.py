@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.sessions.models import Session
 
 class Product(models.Model):
 	class Meta:
@@ -64,7 +65,8 @@ class Cart(models.Model):
 	class Meta:
 		db_table = 'carts'
 
-	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+	session = models.ForeignKey(Session, on_delete=models.SET_NULL, blank=True, null=True)
 	total = models.FloatField(default=0)
 
 	def total_item(self):
@@ -95,7 +97,6 @@ class CartProduct(models.Model):
 class Payment(models.Model):
 	class Meta:
 		db_table = 'payments'
-
 
 	user = models.ForeignKey(User, on_delete=models.RESTRICT)
 	order = models.ForeignKey("Order", on_delete=models.RESTRICT)

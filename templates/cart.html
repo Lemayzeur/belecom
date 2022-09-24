@@ -18,13 +18,19 @@
 			</thead>
 			<tbody>
 				{% for item in cart_items %}
-			    <tr>
-			      <th scope="row">{{forloop.counter}}</th>
+			    <tr class="wrapper-item">
+			      <td scope="row">{{forloop.counter}}</td>
 			      <td>{{item.product.name}}</td>
-			      <td>{{item.quantity}}</td>
-			      <td>{{item.price}} $</td>
-			      <td>{{item.total}} $</td>
-			      <td style="text-align: center;"><a href="#"><i class="fa fa-trash text-danger"></i></a></td>
+			      <td>
+			      	<div class="btn-group" role="group" aria-label="Basic example">
+					  <button type="button" class="btn btn-secondary minus">-</button>
+					  <input class="qty" style="width: 40px;" type="text" value="{{item.quantity}}" name="qty">
+					  <button type="button" class="btn btn-secondary maxi">+</button>
+					</div>
+			      </td>
+			      <td class="price" value="{{item.price}}">{{item.price}} $</td>
+			      <td class="total">{{item.total}} $</td>
+			      <td style="text-align: center;"><a href="/remove-from-cart/{{item.product.id}}"><i class="fa fa-trash text-danger"></i></a></td>
 			  	</tr>
 			  	{% empty %}
 			  	<tr>
@@ -50,3 +56,46 @@
 </div>
 </div>
 {% endblock body %}
+
+{% block script %}
+<script type="text/javascript">
+			
+	// get the minus button
+	let minBtnList = document.querySelectorAll('.wrapper-item button.minus');
+
+	// get the maxi button
+	let maxBtnList = document.querySelectorAll('.wrapper-item button.maxi');
+
+
+	for(var i = 0; i < minBtnList.length; i++){
+		minBtnList[i].addEventListener('click', function(){
+			let par = this.closest('tr.wrapper-item');
+			setQty(par, -1);	
+		});
+	}
+
+	for(var i = 0; i < maxBtnList.length; i++){
+		maxBtnList[i].addEventListener('click', function(){
+			let par = this.closest('tr.wrapper-item');
+			setQty(par, 1);	
+		});
+	}
+
+	function setQty(parent, step){
+		let element = parent.querySelector("input[name=qty]");
+		let qty = parseInt(element.value);
+		let nwQty = qty + step;
+		element.value = nwQty;
+
+		let price = parseFloat(parent.querySelector("td[class=price]").getAttribute("value"));
+		updateTotal(nwQty, price, parent.querySelector("td[class=total]"));
+	}
+
+
+	// Modfiye kolòn total 
+	function updateTotal(nwQty, price, totalNode){
+		newTotal = nwQty * price;
+		totalNode.innerText = `${newTotal.toFixed(1)} \$`;
+	}
+</script>
+{% endblock script %}
